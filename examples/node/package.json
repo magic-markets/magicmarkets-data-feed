@@ -1,0 +1,13 @@
+{
+  "name": "magicmarkets-data-feed-node-examples",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Node.js examples for the MagicMarkets data feed.",
+  "type": "module",
+  "scripts": {
+    "listen": "node listen.mjs"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}
