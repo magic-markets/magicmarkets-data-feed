@@ -233,7 +233,7 @@ every match). Example: `["fb", "2026-05-09,969,1738"]`.
 | `start_ts` | string | Scheduled start time, RFC 3339, UTC (`...Z`). |
 | `ir` | bool | `true` while the event is in-running. |
 | `score` | `[home, away]` \| null | Current score (integers) while in-running. |
-| `ir_time` | `[period_token, minute]` \| null | Period token + minute (e.g. `["1h", 60]`). Only the `"1h"` token was observed during the capture window; other tokens almost certainly exist for other periods and sports. |
+| `ir_time` | `[period_token, minute]` \| null | Period token + minute. Observed tokens: `"1h"` (first half) and `"2h"` (second half) for football, with `minute` counting up within the half. Examples: `["1h", 60]`, `["2h", 14]`. Other tokens almost certainly exist for other periods (extra time, basketball quarters, tennis sets, etc.) and sports; treat unknown tokens as opaque. |
 
 **Upsert**:
 
@@ -327,7 +327,7 @@ hard-fail on unknown families.
 | `basket` | yes | `ml`, `ah`, `ahover`, `ahunder`, `proposition`, `win` | `for,ahover,644` |
 | `baseball` | yes | `tp`, `proposition` | `against,tp,all,ah,a,22` |
 | `ih` | yes | `tp`, `proposition` | `for,tp,all,ah,a,-6` |
-| `mma` | yes | `ml`, `dnb` | `for,dnb,a` |
+| `mma` | yes | `ml`, `dnb`, `ahover`, `ahunder` | `for,dnb,a` |
 | `boxing` | yes | `ml`, `dnb` | `against,ml,a` |
 | `af` | yes (very rare) | `tp` | `against,tp,all,ml,a` |
 | `basket_ht`, `hand`, `rl`, `ru`, `arf`, `volley`, `fb_book`, `darts` | no | – | events present, no prices observed for this account |
@@ -405,22 +405,25 @@ The feed broadcasts events and markets under short sport codes. The list is
 open-ended; treat any unknown code as opaque rather than rejecting the
 record.
 
-Codes observed in `events` (test account, 8-minute capture, 19 distinct):
+Codes observed in `events` across two test accounts (20 distinct):
 
 `fb`, `fb_ht`, `fb_corn`, `fb_corn_ht`, `fb_book`, `basket`, `basket_ht`,
 `baseball`, `af`, `ih`, `tennis`, `hand`, `rl`, `ru`, `arf`, `volley`,
-`mma`, `boxing`, `darts`.
+`mma`, `boxing`, `darts`, `snooker`.
 
-Codes observed in `sptmkt` (subset of the above, 11 distinct):
+Codes observed in `sptmkt` (11 distinct):
 
 `fb`, `fb_ht`, `fb_corn`, `fb_corn_ht`, `basket`, `baseball`, `af`,
 `ih`, `tennis`, `mma`, `boxing`.
 
-Sports present in `events` but with no prices for this account during the
-capture: `basket_ht`, `hand`, `rl`, `ru`, `arf`, `volley`, `fb_book`,
-`darts`. This may be a permissions effect (the test account has limited
-market access) or simply the absence of liquidity for those sports during
-the capture window.
+Sports present in `events` but with no prices observed for either test
+account during the captures: `basket_ht`, `hand`, `rl`, `ru`, `arf`,
+`volley`, `fb_book`, `darts`, `snooker`. This may be a permissions effect
+(test accounts have limited market access) or simply the absence of
+liquidity for those sports during the capture windows. Different accounts
+have different coverage: one test account saw 19 sport codes, the other
+saw 20 (the second account additionally saw `snooker`), and the second
+also saw `mma` markets in `ahover`/`ahunder` that the first did not.
 
 ## 8. Errors and edge cases
 

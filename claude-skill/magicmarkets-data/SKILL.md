@@ -186,7 +186,7 @@ For interactive tools, option 1 is usually right.
 | `start_ts` | string | RFC 3339, UTC. |
 | `ir` | bool | `true` while in-running. |
 | `score` | `[home, away]` \| null | Integers, only while in-running. |
-| `ir_time` | `[period_token, minute]` \| null | E.g. `["1h", 60]`. Other period tokens almost certainly exist; read whatever comes. |
+| `ir_time` | `[period_token, minute]` \| null | Period token + minute. Observed: `"1h"` (e.g. `["1h", 60]`) and `"2h"` (e.g. `["2h", 14]`) for football. Other tokens almost certainly exist for extra time, basket quarters, tennis sets, etc.; read whatever comes. |
 
 `delete` records on `events` happen continuously during normal operation
 (~12/sec on the test account), not only at end-of-life.
@@ -239,10 +239,15 @@ records.
 | `arf` (Australian rules football) | ✓ | – |
 | `volley` (volleyball) | ✓ | – |
 | `darts` | ✓ | – |
+| `snooker` | ✓ | – |
 
-Sports marked "–" had events present but no prices for the test account
-during the capture — could be permissions or simply no liquidity. Read
-what arrives; new codes can appear without notice.
+Sports marked "–" had events present but no prices for either test account
+during the captures — could be permissions or simply no liquidity. Coverage
+differs per account: different accounts saw different sport sets and
+different market families within the same sport (e.g. `mma` was observed
+with `ml`+`dnb` on one account and with `ml`+`dnb`+`ahover`+`ahunder` on
+another). Read what arrives; new codes and new families can appear without
+notice.
 
 ---
 
