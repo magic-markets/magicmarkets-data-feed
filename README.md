@@ -1,193 +1,150 @@
 # MagicMarkets Data Feed
 
-A real-time, read-only stream of sports events and reference prices from
-MagicMarkets. One WebSocket connection delivers every event, every score
-change, and the latest reference price for every priced market the account
-has access to.
+[![CI](https://github.com/magic-markets/magicmarkets-data-feed/actions/workflows/ci.yml/badge.svg)](https://github.com/magic-markets/magicmarkets-data-feed/actions/workflows/ci.yml)
+
+A read-only, real-time WebSocket stream of sports events, live scores and
+reference prices from MagicMarkets. This repository holds the protocol
+reference, example clients in Python and Node, and a Claude skill.
 
 ```
-                ┌──────────────────────────────┐
-                │  data.magicmarkets.com       │
-                │                              │
-   wss://…  ──▶ │  /v1/stream   (firehose WS)  │
-   POST    ──▶ │  /v1/login    (REST auth)    │
-   GET     ──▶ │  /v1/config   (REST verify)  │
-                └──────────────────────────────┘
-```
-
-## What the feed delivers
-
-- A live `events` collection — fixtures (past, live, upcoming) keyed by
-  `(sport, "YYYY-MM-DD,homeID,awayID")`, with competition metadata, scheduled
-  start, in-running flag, current score and clock.
-- A live `sptmkt` collection — one reference price per priced selection on
-  each event, keyed by `(sport, event_id, bet_type)`.
-- Both as a snapshot on every connect, then ongoing deltas.
-
-The feed is **read-only**. It does not expose order books, individual trades,
-or stake size — only the latest reference price per selection.
-
-## Repository layout
-
-```
-.
-├── README.md              ← this file
-├── PROTOCOL.md            ← formal wire-format spec
-├── LICENSE
-├── examples/
-│   ├── python/
-│   │   ├── requirements.txt
-│   │   ├── listen.py        minimal listener
-│   │   ├── store.py         in-memory mirror with progress reporting
-│   │   └── find_event.py    look up an event by team name, print its prices
-│   └── node/
-│       ├── package.json
-│       └── listen.mjs       minimal Node listener
-└── claude-skill/
-    └── magicmarkets-data/   drop-in skill for Claude Code / Desktop
+  your client                                 data.magicmarkets.com
+  -----------                                 ---------------------
+  POST /v1/login   {username, password}  -->  {token, customer}
+  GET  /v1/config  Authorization: Token  -->  200 if the token is valid
+  WSS  /v1/stream?token=<token>          -->  snapshot, then live deltas
 ```
 
 ## Quick start
 
+You need Python 3.10+ or Node 20+. The code blocks below work when pasted
+into bash or zsh.
+
+**1. Get the code.**
+
 ```bash
-# 1. Install the example's one dependency
+git clone https://github.com/magic-markets/magicmarkets-data-feed.git
+cd magicmarkets-data-feed
+python3 -m venv .venv && . .venv/bin/activate
 pip install -r examples/python/requirements.txt
-
-# 2. Get a token
-TOKEN=$(curl -sX POST https://data.magicmarkets.com/v1/login \
-  -H 'Content-Type: application/json' \
-  -d '{"username":"...","password":"..."}' \
-  | python3 -c 'import sys,json; print(json.load(sys.stdin)["token"])')
-
-# 3. Open the firehose
-python3 examples/python/listen.py "$TOKEN"
 ```
 
-Node equivalent:
+**2. Get a token.** This prompts for your feed username and password, sends
+them on stdin (the password never appears in the command line or shell
+history) and exports `MM_DATA_TOKEN`. It prints `login failed` if the
+credentials are wrong.
+
+```bash
+printf 'Username: '; read -r MM_USER
+printf 'Password: '; stty -echo; IFS= read -r MM_PASS; stty echo; printf '\n'
+export MM_USER MM_PASS
+MM_DATA_TOKEN=$(python3 -c 'import json,os; print(json.dumps({"username": os.environ["MM_USER"], "password": os.environ["MM_PASS"]}))' \
+  | curl -sf -X POST https://data.magicmarkets.com/v1/login -H 'Content-Type: application/json' --data-binary @- \
+  | python3 -c 'import json,sys; print(json.load(sys.stdin)["token"])' 2>/dev/null) \
+  && export MM_DATA_TOKEN || echo "login failed" >&2
+unset MM_PASS
+```
+
+**3. Run the examples.** They read the token from `MM_DATA_TOKEN` only.
+`listen.py` prints every record. `find_event.py` prints current prices for
+events that match a team name.
+
+```bash
+python examples/python/listen.py
+python examples/python/find_event.py Manchester United
+```
+
+Node:
 
 ```bash
 cd examples/node && npm install
-node listen.mjs "$TOKEN"
+node listen.mjs
+node find_event.mjs arsenal
 ```
 
-Minimal client:
+Treat the token like a password. Do not commit it or paste it into issues.
 
-```python
-# examples/python/listen.py
-import asyncio, json, sys, websockets
+### Try it without credentials
 
-URL = f"wss://data.magicmarkets.com/v1/stream?token={sys.argv[1]}"
+`make mock` serves a recorded sample session on
+`ws://127.0.0.1:8765/v1/stream`. Run it in one terminal, then point the
+examples at it from another with `MM_DATA_URL`:
 
-async def main():
-    async with websockets.connect(URL, max_size=2**27) as ws:
-        async for raw in ws:
-            for op, coll, key, *rest in json.loads(raw)["data"]:
-                print(op, coll, key, rest[0] if rest else "")
-
-asyncio.run(main())
+```bash
+make mock
 ```
+
+```bash
+MM_DATA_URL=ws://127.0.0.1:8765/v1/stream MM_DATA_TOKEN=demo python examples/python/find_event.py arsenal
+```
+
+`MM_DATA_URL` overrides the stream URL in every example. The default is
+`wss://data.magicmarkets.com/v1/stream`.
+
+## What you get
+
+| Collection | Key | Value |
+|---|---|---|
+| `events` | `[sport, event_id]` | Competition, teams, start time, in-running flag, score, clock |
+| `sptmkt` | `[sport, event_id, bet_type]` | `{"price": <decimal_odds>}` |
+
+Each frame is `{"ts": ..., "data": [[op, collection, key, value?], ...]}`
+with `op` either `upsert` or `delete`. Before you build a client, read these
+points in [PROTOCOL.md](PROTOCOL.md):
+
+- No message marks the end of the snapshot. Use the key-novelty gate in
+  [§3.2](PROTOCOL.md#32-detecting-snapshot-complete).
+- Every reconnect replays the full snapshot.
+- Asian handicap lines are 4 x the home handicap: `for,ah,h,-4` is home -1.0
+  and `for,ah,a,-4` is away +1.0
+  ([§5.3](PROTOCOL.md#53-handicap-line-encoding)).
+- Sport codes and `bet_type` grammar are shared with the MagicMarkets API v2
+  ([magicmarkets.com/llms-full.txt](https://magicmarkets.com/llms-full.txt)).
+  Ignore anything you do not recognise.
+- REST calls need a `User-Agent`. Python's `urllib` default is rejected.
 
 ## Examples
 
 | File | What it does |
 |---|---|
-| [`examples/python/listen.py`](examples/python/listen.py) | Minimal listener — prints every record. |
-| [`examples/python/store.py`](examples/python/store.py) | Maintains a local in-memory mirror keyed by `(collection, key)`. |
-| [`examples/python/find_event.py`](examples/python/find_event.py) | Look up an event by team-name fragment and print its current prices. |
-| [`examples/node/listen.mjs`](examples/node/listen.mjs) | Minimal Node listener (uses `ws`). |
+| [`examples/python/mmfeed.py`](examples/python/mmfeed.py) | Helper library: reconnecting stream, `Store`, `SnapshotTracker`, `split_bet_type`, `decode_line`, `describe_line`, token redaction |
+| [`examples/python/listen.py`](examples/python/listen.py) | Prints every record |
+| [`examples/python/store.py`](examples/python/store.py) | Live in-memory mirror with a status line each second |
+| [`examples/python/find_event.py`](examples/python/find_event.py) | Prices for events that match a team name, with decoded lines such as `line=away -1.0` |
+| [`examples/node/mmfeed.mjs`](examples/node/mmfeed.mjs) | The same helpers for Node |
+| [`examples/node/listen.mjs`](examples/node/listen.mjs) | Prints every record |
+| [`examples/node/find_event.mjs`](examples/node/find_event.mjs) | Prices for events that match a team name, with decoded lines |
 
-## Wire format at a glance
+## Tests
 
-```json
-{ "ts": 1778476931.285601, "data": [
-  ["upsert", "events", ["fb", "2026-05-09,969,1738"], { ... }],
-  ["upsert", "sptmkt", ["fb", "2026-05-09,969,1738", "for,h"], { "price": 1.91 }],
-  ["delete", "sptmkt", ["fb", "2026-05-12,26000,37537", "for,ahunder,19"]]
-]}
-```
-
-- `op` is `"upsert"` or `"delete"`.
-- `collection` is `"events"` or `"sptmkt"`.
-- `value` is present only for `"upsert"` and has a fixed shape per collection
-  (`events`: nine fields; `sptmkt`: just `{price}`).
-
-Full specification with key shapes, value shapes, bet-type families,
-handicap-line encoding, and edge cases: [**PROTOCOL.md**](PROTOCOL.md).
-
-## Observed throughput
-
-Single connection, all sports the account has access to:
-
-| Phase | Records | Wall-clock |
-|---|---|---|
-| Initial replay (`events` first, then `sptmkt`) | ~190 000 records | 4–15 s, with internal gaps |
-| Steady-state deltas | ~70 records/sec average (≈12 events + ≈58 sptmkt) | continuous |
-| Steady-state bursts | several hundred records/sec | during heavy market activity |
-
-The replay is two-phase: the full `events` collection is upserted first,
-then the full `sptmkt` collection, then steady-state deltas begin. There is
-**no "snapshot complete" sentinel**, and the replay itself contains many
-internal gaps (up to several seconds *within* the events phase). Don't
-detect snapshot completion with a naive short-quiet-gap heuristic — use
-something like "at least one `sptmkt` upsert seen, then a quiet gap ≥2 s,"
-or "frame.ts within 1 s of wall-clock." See [PROTOCOL.md §3](PROTOCOL.md)
-for details.
-
-WebSocket frames are compressed with `permessage-deflate` by default; REST
-responses support `Accept-Encoding: gzip`. Plan for a JSON parser fast
-enough to keep up with the snapshot burst (`orjson` / `simdjson` recommended
-for high-volume bots), and treat the local store as a flat dictionary keyed
-by `(collection, key_tuple)`.
-
-The server does not send WebSocket ping frames — a 60-second idle test with
-the client also silent did not produce any disconnect — but production
-clients should still configure a ping/pong timeout on their own side.
-
-## Authentication
-
-Send `{"username", "password"}` to `POST /v1/login` and reuse the returned
-`token` for both REST and the WebSocket:
-
-| Channel | How |
+| Command | What it does |
 |---|---|
-| REST | `Authorization: Token <token>` header |
-| WebSocket | `?token=<token>` query parameter — **not** a header |
+| `make install` | Installs dev dependencies. Run it inside the virtual environment. |
+| `make check` | Lint, tests against a local mock server, skill sync check, copy and link checks. CI runs the same. |
+| `make test-live` | Opt-in smoke test against the live feed. Needs `MM_DATA_TOKEN`. CI never runs it. |
 
-Sending the WebSocket connection request with only the header (no query
-parameter) returns `HTTP 502` — the streaming backend refuses the upgrade.
+## Claude skill
 
-Treat tokens like passwords: load from an environment variable
-(`export MM_DATA_TOKEN=...`), don't commit them, don't log them.
+[`claude-skill/magicmarkets-data/`](claude-skill/magicmarkets-data/) teaches
+Claude Code to connect to the feed, wait for the snapshot, decode bet types
+and answer price questions with sourced prices. Copy the folder to
+`~/.claude/skills/` (all projects) or `.claude/skills/` (one project). The
+skill needs a machine that can reach `data.magicmarkets.com` and
+`MM_DATA_TOKEN` set in the environment.
 
-## Using the feed with an LLM
+## Access and terms
 
-This repo ships a ready-to-install **Claude skill** that teaches Claude how
-to connect to the feed, build a local cache, answer questions like "what's
-the current price on team X tonight," and translate between team names and
-event IDs.
+Feed credentials come from MagicMarkets. Contact us through
+[magicmarkets.com](https://magicmarkets.com).
 
-```
-claude-skill/magicmarkets-data/
-├── SKILL.md
-├── references/protocol.md
-└── examples/
-```
+The MIT licence covers the code in this repository. Use of the feed data is
+governed by your agreement with MagicMarkets.
 
-Install it by copying `claude-skill/magicmarkets-data/` into one of:
+## More
 
-- **Claude Code** — `~/.claude/skills/` (user-wide) or `.claude/skills/`
-  (per-project).
-- **Claude Desktop** — drop the folder into the skills directory shown by
-  Settings → Skills.
-
-Then ask Claude something like *"using the magicmarkets data feed, what's
-the current home/draw/away price on tonight's PSG vs Lyon match?"* — the
-skill will trigger automatically.
-
-## Getting credentials
-
-Contact MagicMarkets to request data-feed credentials for production use.
+- [PROTOCOL.md](PROTOCOL.md): the full protocol reference
+- [CHANGELOG.md](CHANGELOG.md), [CONTRIBUTING.md](CONTRIBUTING.md),
+  [SECURITY.md](SECURITY.md), [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE).

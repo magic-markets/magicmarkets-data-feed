@@ -1,0 +1,68 @@
+name: Bug report
+description: An example, test, script or the Claude skill does not work as documented.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not use this form for security problems. See SECURITY.md.
+        Never paste a token, a password or a stream URL (it contains the token).
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What you saw, and what you expected instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: The exact commands you ran. Replace any token with <token>.
+      placeholder: |
+        python examples/python/find_event.py arsenal
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: output
+    attributes:
+      label: Output
+      description: Error messages or unexpected output, as text. Redact tokens and stream URLs.
+      render: shell
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options:
+        - Python examples
+        - Node examples
+        - Claude skill
+        - Tests or CI
+        - Documentation
+    validations:
+      required: true
+
+  - type: input
+    id: runtime
+    attributes:
+      label: Runtime and OS
+      placeholder: Python 3.12 / Node 22, macOS 15 arm64
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues and found no duplicate.
+          required: true
+        - label: I removed every token, password and stream URL from this report.
+          required: true
+        - label: This is not a security problem (those go through SECURITY.md).
+          required: true

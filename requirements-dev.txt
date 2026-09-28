@@ -1,0 +1,7 @@
+# Development and CI dependencies. Install with: pip install -r requirements-dev.txt
+# Tested with pytest 8.4 and 9.1, pytest-asyncio 0.24 and 1.4. ruff is pinned so lint results do not drift.
+-r examples/python/requirements.txt
+pytest>=8.4,<10
+pytest-asyncio>=0.24,<2
+pytest-timeout>=2.3,<3
+ruff==0.16.9

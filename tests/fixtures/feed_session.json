@@ -1,0 +1,80 @@
+{
+ "description": "A short feed session in the shapes documented in PROTOCOL.md: an events replay phase, an sptmkt replay phase (with proposition and empty event_id rows), deltas including deletes, an unknown collection, an unknown op and malformed records, then steady-state frames that update known keys only. The mock server loops the steady frames without pauses, as the live feed does. against prices are the complement of for prices plus a small margin. Names and prices are illustrative.",
+ "events_phase": [
+  {"ts": 1778476931.285601, "data": [
+    ["upsert", "events", ["fb", "2026-05-11,969,1738"], {"competition_id": 7, "competition_name": "Germany Bundesliga 2", "competition_country": "DE", "home": "1. FC Magdeburg", "away": "Hertha BSC", "start_ts": "2026-05-11T04:30:00Z", "ir": true, "score": [0, 0], "ir_time": ["2h", 52]}],
+    ["upsert", "events", ["fb", "2026-05-11,19,42"], {"competition_id": 1, "competition_name": "England Premier League", "competition_country": "GB", "home": "Arsenal", "away": "Chelsea", "start_ts": "2026-05-11T19:00:00Z", "ir": false, "score": null, "ir_time": null}],
+    ["upsert", "events", ["fb_ht", "2026-05-11,19,42"], {"competition_id": 1, "competition_name": "England Premier League", "competition_country": "GB", "home": "Arsenal", "away": "Chelsea", "start_ts": "2026-05-11T19:00:00Z", "ir": false, "score": null, "ir_time": null}],
+    ["upsert", "events", ["fb_corn", "2026-05-11,19,42"], {"competition_id": 1, "competition_name": "England Premier League", "competition_country": "GB", "home": "Arsenal", "away": "Chelsea", "start_ts": "2026-05-11T19:00:00Z", "ir": false, "score": null, "ir_time": null}]
+  ]},
+  {"ts": 1778476931.412007, "data": [
+    ["upsert", "events", ["basket", "2026-05-11,40897,40912"], {"competition_id": 132, "competition_name": "NBA", "competition_country": "US", "home": "Boston Celtics", "away": "New York Knicks", "start_ts": "2026-05-11T23:30:00Z", "ir": false, "score": null, "ir_time": null}],
+    ["upsert", "events", ["baseball", "2026-05-11,700,701"], {"competition_id": 225, "competition_name": "MLB", "competition_country": "US", "home": "New York Yankees", "away": "Boston Red Sox", "start_ts": "2026-05-11T17:05:00Z", "ir": false, "score": null, "ir_time": null}],
+    ["upsert", "events", ["curling", "2026-05-12,9001,9002"], {"competition_id": 999, "competition_name": "World Curling Tour", "competition_country": "XX", "home": "Team North", "away": "Team South", "start_ts": "2026-05-12T09:00:00Z", "ir": false, "score": null, "ir_time": null}]
+  ]}
+ ],
+ "sptmkt_phase": [
+  {"ts": 1778476932.503311, "data": [
+    ["upsert", "sptmkt", ["fb", "2026-05-11,19,42", "for,h"], {"price": 2.1}],
+    ["upsert", "sptmkt", ["fb", "2026-05-11,19,42", "against,h"], {"price": 1.9}],
+    ["upsert", "sptmkt", ["fb", "2026-05-11,19,42", "for,d"], {"price": 3.4}],
+    ["upsert", "sptmkt", ["fb", "2026-05-11,19,42", "for,a"], {"price": 3.6}],
+    ["upsert", "sptmkt", ["fb", "2026-05-11,19,42", "for,ah,h,-4"], {"price": 1.91}],
+    ["upsert", "sptmkt", ["fb", "2026-05-11,19,42", "against,ah,h,-4"], {"price": 2.05}],
+    ["upsert", "sptmkt", ["fb", "2026-05-11,19,42", "for,ah,a,-4"], {"price": 2.02}],
+    ["upsert", "sptmkt", ["fb", "2026-05-11,19,42", "for,ahover,10"], {"price": 1.95}],
+    ["upsert", "sptmkt", ["fb", "2026-05-11,19,42", "for,ahunder,10"], {"price": 1.93}],
+    ["upsert", "sptmkt", ["fb", "2026-05-11,19,42", "for,over,2.5"], {"price": 1.87}],
+    ["upsert", "sptmkt", ["fb", "2026-05-11,19,42", "for,cs,2,1"], {"price": 8.5}],
+    ["upsert", "sptmkt", ["fb", "2026-05-11,19,42", "for,score,both"], {"price": 1.8}],
+    ["upsert", "sptmkt", ["fb", "2026-05-11,19,42", "for,newfamily,1,2"], {"price": 1.5}],
+    ["upsert", "sptmkt", ["fb", "2026-05-11,969,1738", "for,h"], {"price": 1.5}],
+    ["upsert", "sptmkt", ["fb", "2026-05-11,969,1738", "for,ah,a,-1"], {"price": 1.72}]
+  ]},
+  {"ts": 1778476932.690004, "data": [
+    ["upsert", "sptmkt", ["fb_ht", "2026-05-11,19,42", "for,ah,h,-2"], {"price": 2.05}],
+    ["upsert", "sptmkt", ["fb_ht", "2026-05-11,19,42", "for,cs,0,0"], {"price": 3.1}],
+    ["upsert", "sptmkt", ["basket", "2026-05-11,40897,40912", "for,ml,h"], {"price": 1.44}],
+    ["upsert", "sptmkt", ["basket", "2026-05-11,40897,40912", "for,ahover,644"], {"price": 1.9}],
+    ["upsert", "sptmkt", ["baseball", "2026-05-11,700,701", "for,proposition,[\"Exact Total Runs 1st Half\",\"0\",\"Game Props - 1st Half\"]"], {"price": 3.25}],
+    ["upsert", "sptmkt", ["baseball", "2026-05-11,700,701", "for,proposition,[\"Player Hits, Over\",\"1.5\",\"Props \\\"Batter\\\"\"]"], {"price": 2.4}],
+    ["upsert", "sptmkt", ["fb", "", "against,win,374"], {"price": 1.012}],
+    ["upsert", "sptmkt", ["fb", "", "for,win,19"], {"price": 5.5}],
+    ["upsert", "sptmkt", ["fb", "", "for,win,42"], {"price": 9.0}],
+    ["upsert", "sptmkt", ["basket", "", "for,win,40897"], {"price": 1.584}],
+    ["upsert", "sptmkt", ["fb", "", "for,ir,0,2,ah,a,-2"], {"price": 2.176}]
+  ]}
+ ],
+ "deltas": [
+  {"ts": 1778476950.120931, "data": [
+    ["upsert", "events", ["fb", "2026-05-11,969,1738"], {"competition_id": 7, "competition_name": "Germany Bundesliga 2", "competition_country": "DE", "home": "1. FC Magdeburg", "away": "Hertha BSC", "start_ts": "2026-05-11T04:30:00Z", "ir": true, "score": [1, 0], "ir_time": ["2h", 55]}],
+    ["upsert", "sptmkt", ["fb", "2026-05-11,19,42", "for,h"], {"price": 2.05}],
+    ["delete", "sptmkt", ["fb", "2026-05-11,19,42", "against,h"]],
+    ["delete", "events", ["curling", "2026-05-12,9001,9002"]],
+    ["upsert", "widgets", ["x"], {"a": 1}],
+    ["replace", "events", ["fb", "2026-05-11,19,42"], {}],
+    ["upsert"],
+    ["delete", "sptmkt", "not-a-list"]
+  ]},
+  {"ts": 1778476950.871215, "data": [
+    ["delete", "sptmkt", ["fb", "", "against,win,374"]],
+    ["delete", "sptmkt", ["fb", "2026-05-09,555,556", "for,h"]]
+  ]}
+ ],
+ "steady": [
+  {"ts": 1778476951.02, "data": [
+    ["upsert", "sptmkt", ["fb", "2026-05-11,19,42", "for,d"], {"price": 3.35}],
+    ["upsert", "sptmkt", ["fb", "2026-05-11,969,1738", "for,h"], {"price": 1.48}]
+  ]},
+  {"ts": 1778476951.09, "data": [
+    ["upsert", "sptmkt", ["basket", "2026-05-11,40897,40912", "for,ml,h"], {"price": 1.45}],
+    ["upsert", "events", ["fb", "2026-05-11,969,1738"], {"competition_id": 7, "competition_name": "Germany Bundesliga 2", "competition_country": "DE", "home": "1. FC Magdeburg", "away": "Hertha BSC", "start_ts": "2026-05-11T04:30:00Z", "ir": true, "score": [1, 0], "ir_time": ["2h", 56]}]
+  ]},
+  {"ts": 1778476951.17, "data": [
+    ["upsert", "sptmkt", ["fb", "2026-05-11,19,42", "for,a"], {"price": 3.65}],
+    ["upsert", "sptmkt", ["fb", "2026-05-11,19,42", "for,d"], {"price": 3.4}],
+    ["delete", "sptmkt", ["fb", "2026-05-09,555,556", "for,h"]]
+  ]}
+ ],
+ "expected": {"after_snapshot": {"events": 7, "sptmkt": 26}, "final": {"events": 6, "sptmkt": 24, "in_running": 1, "applied": 39, "skipped": 4, "printed_lines": 42}}
+}
