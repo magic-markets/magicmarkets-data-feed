@@ -1,35 +1,57 @@
-"""Minimal MagicMarkets data-feed listener.
+"""Print every record from the MagicMarkets data feed.
 
 Usage:
-    python3 listen.py <token>
-    MM_DATA_TOKEN=... python3 listen.py
+    MM_DATA_TOKEN=<token> python3 listen.py
+
+Each record prints as one line on stdout:
+
+    upsert sptmkt ["fb","2026-05-09,969,1738","for,h"] {"price":1.91}
+    delete events ["fb","2026-08-15,10050631,10037275"]
+
+Connection messages go to stderr, with one line when the snapshot replay is
+complete. The script reconnects on its own; after a reconnect the server
+replays the full snapshot, so expect a burst of upserts. Stop it with Ctrl-C.
 """
-import asyncio
+
 import json
-import os
 import sys
-import websockets
+import time
+
+import mmfeed
 
 
-def get_token() -> str:
-    if len(sys.argv) > 1:
-        return sys.argv[1]
-    token = os.environ.get("MM_DATA_TOKEN")
-    if not token:
-        sys.exit("usage: listen.py <token>   (or set MM_DATA_TOKEN)")
-    return token
+def compact(value: object) -> str:
+    return json.dumps(value, separators=(",", ":"), ensure_ascii=False)
 
 
 async def main() -> None:
-    url = f"wss://data.magicmarkets.com/v1/stream?token={get_token()}"
-    async with websockets.connect(url, max_size=2**27) as ws:
-        async for raw in ws:
-            frame = json.loads(raw)
-            for record in frame["data"]:
-                op, collection, key, *rest = record
-                value = rest[0] if rest else None
-                print(op, collection, key, value)
+    token = mmfeed.get_token()
+    tracker = mmfeed.SnapshotTracker()
+    connected_at = time.monotonic()
+    announced = False
+    async for frame in mmfeed.stream_frames(token):
+        if frame is mmfeed.RECONNECTED:
+            print("reconnected: full snapshot replay follows", file=sys.stderr)
+            tracker.reset()
+            connected_at, announced = time.monotonic(), False
+            continue
+        tracker.is_complete()  # lets a quiet gap before this frame count
+        tracker.observe(frame)
+        if not announced and tracker.is_complete():
+            waited = time.monotonic() - connected_at
+            print(f"snapshot complete ({tracker.reason}) {waited:.1f} s after connect", file=sys.stderr)
+            announced = True
+        records = frame.get("data") if isinstance(frame, dict) else None
+        for record in records if isinstance(records, list) else []:
+            if not isinstance(record, list) or len(record) < 3:
+                continue  # malformed record: skip it
+            op, collection, key, *rest = record
+            line = f"{op} {collection} {compact(key)}"
+            if rest:
+                line += f" {compact(rest[0])}"
+            print(line, flush=True)
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    mmfeed.configure_logging()
+    mmfeed.run(main())

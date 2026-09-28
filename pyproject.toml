@@ -1,0 +1,28 @@
+# Tool configuration only. This repository is not a Python package.
+# Dev dependencies: requirements-dev.txt
+
+[tool.ruff]
+line-length = 110
+target-version = "py310"
+extend-exclude = ["*.md", "claude-skill"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF"]
+ignore = ["RUF001", "RUF002", "RUF003"]
+
+[tool.ruff.lint.isort]
+known-first-party = [
+    "mmfeed", "listen", "store", "find_event", "conftest", "mock_feed", "check_copy", "check_links", "sync_skill",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["examples/python", "tests", "scripts"]
+addopts = "-m 'not live' --strict-markers"
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+# A hung test fails after 60 s instead of burning a CI job (pytest-timeout).
+timeout = 60
+markers = [
+    "live: connects to the real feed; needs MM_DATA_TOKEN (run with: pytest -m live)",
+]
