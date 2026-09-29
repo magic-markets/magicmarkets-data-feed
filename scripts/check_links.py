@@ -23,7 +23,7 @@ from pathlib import Path
 from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parent.parent
-EXPECTED_URL = "https://github.com/magic-markets/magicmarkets-data-feed"
+EXPECTED_URL = "https://github.com/magicmarkets/magicmarkets-data-feed"
 EXPECTED_REPO = EXPECTED_URL.removeprefix("https://github.com/")
 GITHUB_URL = re.compile(r"(?:https?://(?:www\.)?github\.com/|git@github\.com:)([\w.-]+)/([\w.-]+)", re.I)
 SKIP_DIRS = {".git", "node_modules", ".venv", "venv", "env", ".pytest_cache"}

@@ -1,6 +1,6 @@
 # MagicMarkets Data Feed
 
-[![CI](https://github.com/magic-markets/magicmarkets-data-feed/actions/workflows/ci.yml/badge.svg)](https://github.com/magic-markets/magicmarkets-data-feed/actions/workflows/ci.yml)
+[![CI](https://github.com/magicmarkets/magicmarkets-data-feed/actions/workflows/ci.yml/badge.svg)](https://github.com/magicmarkets/magicmarkets-data-feed/actions/workflows/ci.yml)
 
 A read-only, real-time WebSocket stream of sports events, live scores and
 reference prices from MagicMarkets. This repository holds the protocol
@@ -22,7 +22,7 @@ into bash or zsh.
 **1. Get the code.**
 
 ```bash
-git clone https://github.com/magic-markets/magicmarkets-data-feed.git
+git clone https://github.com/magicmarkets/magicmarkets-data-feed.git
 cd magicmarkets-data-feed
 python3 -m venv .venv && . .venv/bin/activate
 pip install -r examples/python/requirements.txt

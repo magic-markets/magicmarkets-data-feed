@@ -9,7 +9,7 @@ Only the latest release of this repository receives fixes.
 **Do not open a public issue for a security problem.**
 
 Report it privately with GitHub
-[private vulnerability reporting](https://github.com/magic-markets/magicmarkets-data-feed/security/advisories/new)
+[private vulnerability reporting](https://github.com/magicmarkets/magicmarkets-data-feed/security/advisories/new)
 (the "Report a vulnerability" button on the repository's Security tab). This
 lets you share details and proof-of-concept code with the maintainers before
 anything is public.

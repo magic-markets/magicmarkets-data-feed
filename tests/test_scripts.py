@@ -14,6 +14,7 @@ import sync_skill
 EM, EN = "\u2014", "\u2013"
 TWO_WORD_BRAND = "Magic" + " Markets"
 SLUG = "magic" + "-markets"
+ORG = "magicmarkets"
 
 
 # --------------------------------------------------------------------------
@@ -193,24 +194,24 @@ def test_check_links_flags_this_repository_under_another_org(tmp_path, capsys):
     doc.write_text(
         "\n".join(
             [
-                "[ok](https://github.com/magic-markets/magicmarkets-data-feed/actions)",
-                "git clone https://github.com/Magic-Markets/magicmarkets-data-feed.git",
+                "[ok](https://github.com/magicmarkets/magicmarkets-data-feed/actions)",
+                "git clone https://github.com/MagicMarkets/magicmarkets-data-feed.git",
                 "[other repo](https://github.com/actions/checkout)",
-                "[stale](https://github.com/magicmarkets/magicmarkets-data-feed/issues)",
+                "[stale](https://github.com/magic" + "-markets/magicmarkets-data-feed/issues)",
                 "git clone git@github.com:someone/magicmarkets-data-feed.git",
             ]
         )
         + "\n",
         encoding="utf-8",
     )
-    assert check_links.main([str(doc)], expected=f"{SLUG}/magicmarkets-data-feed") == 1
+    assert check_links.main([str(doc)], expected=f"{ORG}/magicmarkets-data-feed") == 1
     out = capsys.readouterr().out.splitlines()
     assert [line.split(": ", 2)[1] for line in out] == ["wrong repository URL", "wrong repository URL"]
     assert f"{doc}:4:" in out[0] and f"{doc}:5:" in out[1]
 
 
 def test_expected_repo_comes_from_the_origin_remote():
-    assert check_links.expected_repo() == f"{SLUG}/magicmarkets-data-feed" == check_links.EXPECTED_REPO
+    assert check_links.expected_repo() == f"{ORG}/magicmarkets-data-feed" == check_links.EXPECTED_REPO
 
 
 def test_sync_skill_adapts_protocol_paths(tmp_path):
@@ -225,7 +226,7 @@ def test_sync_skill_adapts_protocol_paths(tmp_path):
     assert copy == (
         "See `examples/mmfeed.py` and the Node example `mmfeed.mjs` in the source repository.\n"
         "[helper](../examples/find_event.py) "
-        "[readme](https://github.com/magic-markets/magicmarkets-data-feed/blob/main/README.md) "
+        "[readme](https://github.com/magicmarkets/magicmarkets-data-feed/blob/main/README.md) "
         "[anchor](#top) [web](https://x.test/a)\n"
     )
     assert sync_skill.main(["--check"], root=tmp_path) == 0

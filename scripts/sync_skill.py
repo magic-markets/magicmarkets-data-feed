@@ -26,7 +26,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 SKILL = ROOT / "claude-skill" / "magicmarkets-data"
 EXAMPLES = ("mmfeed.py", "listen.py", "store.py", "find_event.py")
-REPO_URL = "https://github.com/magic-markets/magicmarkets-data-feed"
+REPO_URL = "https://github.com/magicmarkets/magicmarkets-data-feed"
 
 _LINK = re.compile(r"\]\((?!https?:|mailto:|#)([^)\s]+)\)")
 

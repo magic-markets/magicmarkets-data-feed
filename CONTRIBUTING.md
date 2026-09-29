@@ -17,7 +17,7 @@ By taking part you agree to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
 You need Python 3.10 or later, Node 20 or later, and `make`.
 
 ```bash
-git clone https://github.com/magic-markets/magicmarkets-data-feed.git
+git clone https://github.com/magicmarkets/magicmarkets-data-feed.git
 cd magicmarkets-data-feed
 python3 -m venv .venv
 . .venv/bin/activate

@@ -5,6 +5,14 @@ Notable changes to this repository. The format follows
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). The feed protocol
 itself is identified by its URL path (`/v1/`).
 
+## [Unreleased]
+
+### Changed
+
+- The repository moved to the `magicmarkets` GitHub organisation. All links
+  now point to github.com/magicmarkets/magicmarkets-data-feed. The old URL
+  redirects.
+
 ## [1.0.0] - 2026-09-28
 
 ### Breaking
@@ -54,5 +62,5 @@ itself is identified by its URL path (`/v1/`).
 - Initial release: protocol reference, Python examples, a Node listener and
   the `magicmarkets-data` Claude skill.
 
-[1.0.0]: https://github.com/magic-markets/magicmarkets-data-feed/releases/tag/v1.0.0
-[0.1.0]: https://github.com/magic-markets/magicmarkets-data-feed/tree/aa5ab33
+[1.0.0]: https://github.com/magicmarkets/magicmarkets-data-feed/releases/tag/v1.0.0
+[0.1.0]: https://github.com/magicmarkets/magicmarkets-data-feed/tree/aa5ab33
